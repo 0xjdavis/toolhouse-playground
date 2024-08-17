@@ -1,4 +1,4 @@
-# 💬 Toolhouse Playground
+# 🎈 Toolhouse Playground
 
 The Toolhouse Playground is an interactive environment that allows you to test [Toolhouse](https://toolhouse.ai) across various Language Models (LLMs) of your choice. It provides a user-friendly conversational interface to help you run and experiment with tools you add from the Tool Store.
 
@@ -6,6 +6,9 @@ The Toolhouse Playground is an interactive environment that allows you to test [
 - 🏷️ Conveniently set metadata to customize your experience
 - 🧰 Quickly check your installed tools and their functionalities
 - 🌊 Supports streaming responses by default for real-time interaction
+
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://toolhouse.streamlit.app/)
+
 
 ## 🛠️ Configuration
 
