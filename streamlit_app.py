@@ -36,6 +36,7 @@ st.write(
 openai_api_key = st.text_input("OpenAI API Key", type="password")
 mailgun_api_key = st.text_input("Mailgun API Key", type="password")
 mailgun_domain = st.text_input("Mailgun Domain", type="default")
+
 if not openai_api_key or not mailgun_api_key or not mailgun_domain:
     st.info("Please add your API key(s)/info to continue.", icon="🗝️")
 else:
@@ -86,7 +87,8 @@ else:
         ]
         msgs = [
             {"role": "system", "content": "You are a helpful assistant that can chat with a user and send emails."},
-            {"role": "assistant", "content": "My sender email address is 'mailgun@sandboxe3ee30865707422a8f4ce9da59bc9c8c.mailgun.org'."},
+            {"role": "assistant", "content": "My sender email address is 'mailgun.sandbox1174a2f2424c4d07913816604e3c1138.mailgun.org'."}
+            #'mailgun@sandboxe3ee30865707422a8f4ce9da59bc9c8c.mailgun.org'."},
             ] + [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
         stream = client.chat.completions.create(
             model="gpt-4o",
@@ -143,3 +145,6 @@ else:
                     response = stream.choices[0].message.content
                     st.write(response)
                     st.session_state.messages.append({"role": "assistant", "content": response})
+
+
+
