@@ -1,7 +1,7 @@
 import streamlit as st
+import openai
 import requests
 import json
-import openai
 from datetime import datetime, timezone
 
 def send_email(api_key, domain, sender, recipient, subject, body):
@@ -22,12 +22,7 @@ def send_email(api_key, domain, sender, recipient, subject, body):
         return f"Failed to send email: {response.status_code}, {response.text}"
 
 st.title("💬 Chatbot")
-st.write(
-    "This is a simple chatbot that uses OpenAI's GPT-4 model to generate responses. "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys)."
-)
 
-# Get API keys and domain from user input
 openai_api_key = st.text_input("OpenAI API Key", type="password")
 mailgun_api_key = st.text_input("Mailgun API Key", type="password")
 mailgun_domain = st.text_input("Mailgun Domain")
@@ -64,33 +59,33 @@ else:
                         "body": {"type": "string", "description": "Body of the email"}
                     },
                     "required": ["api_key", "domain", "sender", "recipient", "subject", "body"]
-                },
-                "type": "function"
+                }
             },
             {
                 "name": "current_time",
                 "description": "Gets the current UTC time in ISO format.",
-                "parameters": {},
-                "type": "function"
+                "parameters": {}
             },
         ]
 
-        msgs = [
-            {"role": "system", "content": "You are a helpful assistant that can chat with a user and send emails."},
-        ] + [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
-
         response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=msgs,
+            model="gpt-4-0613",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt},
+            ],
             functions=functions,
-            function_call="auto",
+            function_call="auto"
         )
 
-        assistant_message = response['choices'][0]['message']
+        response_message = response.choices[0].message
+        st.session_state.messages.append({"role": "assistant", "content": response_message["content"]})
+        with st.chat_message("assistant"):
+            st.markdown(response_message["content"])
 
-        if 'function_call' in assistant_message:
-            function_call_name = assistant_message["function_call"]["name"]
-            arguments = json.loads(assistant_message["function_call"]["arguments"])
+        if response_message.get("function_call"):
+            function_call_name = response_message["function_call"]["name"]
+            arguments = json.loads(response_message["function_call"]["arguments"])
 
             if function_call_name == "send_email":
                 result = send_email(
@@ -102,12 +97,11 @@ else:
                     body=arguments['body']
                 )
                 st.session_state.messages.append({"role": "assistant", "content": result})
+                with st.chat_message("assistant"):
+                    st.markdown(result)
+
             elif function_call_name == "current_time":
                 utc_time = datetime.now(timezone.utc).isoformat()
                 st.session_state.messages.append({"role": "assistant", "content": utc_time})
-        else:
-            response_text = assistant_message.get("content", "No response received.")
-            st.session_state.messages.append({"role": "assistant", "content": response_text})
-
-        with st.chat_message("assistant"):
-            st.markdown(st.session_state.messages[-1]["content"])
+                with st.chat_message("assistant"):
+                    st.markdown(utc_time)
