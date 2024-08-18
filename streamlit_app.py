@@ -138,7 +138,7 @@ def main():
     
     # Sidebar for API Key and User Info
     st.sidebar.header("About App")
-    st.sidebar.markdown('This is an app that retreives data from files using the Figma API created by <a href="https://ai.jdavis.xyz" target="_blank">0xjdavis</a>.', unsafe_allow_html=True)
+    st.sidebar.markdown('This is an app that uses natural language to send emails from a chatbot created by <a href="https://ai.jdavis.xyz" target="_blank">0xjdavis</a>.', unsafe_allow_html=True)
     
     # Calendly
     st.sidebar.markdown("""
@@ -159,9 +159,7 @@ def main():
 
     st.title("AI Chatbot with Email Tools")
     st.write(
-        "This chatbot uses OpenAI's GPT-4 model for natural language processing and Mailgun to send emails."
         "You need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-        
     )
 
     openai_api_key = st.text_input("OpenAI API Key", type="password")
