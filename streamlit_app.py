@@ -5,38 +5,22 @@ import json
 import os
 from datetime import datetime, timezone
 
-# def send_email(api_key, domain, sender, recipient, subject, body):
-
-#    url = f"https://api.mailgun.net/v3/{domain}/messages"
-#    auth = ("api", api_key)
-#    data = {
-#        "from": sender,
-#        "to": recipient,
-#        "subject": subject,
-#        "text": body
-#    }
-
 def send_email(api_key, domain, sender, recipient, subject, body):
-# return requests.post(
-    url = "https://api.mailgun.net/v3/{domain}/messages",
+    url = f"https://api.mailgun.net/v3/{domain}/messages"
     auth = ("api", api_key)
-    data={
-        "from": "Sorcery Agent <mailgun@mailagent.sorcery.ai>",
+    data = {
+        "from": sender,
         "to": recipient,
-        "subject": "Email from a Sorcery AI Agent",
-        "text": "Works like a charm"}
-#)
+        "subject": subject,
+        "text": body,
+    }
 
-
-
-
-    
     response = requests.post(url, auth=auth, data=data)
-    
+
     if response.status_code == 200:
         return "Email sent successfully!"
     else:
-        return f"Failed to send email: {response.status_code} - {response.text}"
+        return f"Failed to send email: {response.status_code}, {response.text}"
 
 st.title("💬 Chatbot")
 st.write(
@@ -101,7 +85,7 @@ else:
         ]
         msgs = [
             {"role": "system", "content": "You are a helpful assistant that can chat with a user and send emails."},
-            {"role": "assistant", "content": "My sender email address is 'mailgun.sorcery.ai."},
+            {"role": "assistant", "content": "My sender email address is 'hello@sorcery.ai."},
             ] + [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
         stream = client.chat.completions.create(
             model="gpt-4o",
