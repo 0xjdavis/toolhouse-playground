@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 
 def send_email(api_key, domain, sender, recipient, subject, body):
 # return requests.post(
-    url = f"https://api.mailgun.net/v3/{domain}/messages",
+    url = "https://api.mailgun.net/v3/{domain}/messages",
     auth = ("api", api_key)
     data={
         "from": "Sorcery Agent <mailgun@mailagent.sorcery.ai>",
