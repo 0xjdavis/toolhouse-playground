@@ -2,6 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import requests
 import json
+import os
 from datetime import datetime, timezone
 
 def send_email(api_key, domain, sender, recipient, subject, body):
@@ -49,26 +50,32 @@ else:
         with st.chat_message("user"):
             st.markdown(prompt)
         
-        functions = [
+        tools = [
             {
-                "name": "send_email",
-                "description": "Send an email using the Mailgun API",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "sender": {"type": "string", "description": "Sender email address"},
-                        "recipient": {"type": "string", "description": "Recipient email address"},
-                        "subject": {"type": "string", "description": "Subject of the email"},
-                        "body": {"type": "string", "description": "Body of the email"}
-                    },
-                    "required": ["sender", "recipient", "subject", "body"]
+                "type": "function",
+                "function": {
+                    "name": "send_email",
+                    "description": "Send an email using the Mailgun API",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "sender": {"type": "string", "description": "Sender email address"},
+                            "recipient": {"type": "string", "description": "Recipient email address"},
+                            "subject": {"type": "string", "description": "Subject of the email"},
+                            "body": {"type": "string", "description": "Body of the email"}
+                        },
+                        "required": ["sender", "recipient", "subject", "body"]
+                    }
                 }
             },
             {
-                "name": "current_time",
-                "description": "Gets the current UTC time in ISO format.",
-                "parameters": {}
-            },
+                "type": "function",
+                "function": {
+                    "name": "current_time",
+                    "description": "Gets the current UTC time in ISO format.",
+                    "parameters": {}
+                }
+            }
         ]
         
         msgs = [
@@ -78,7 +85,7 @@ else:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=msgs,
-            tools=functions,
+            tools=tools,
             tool_choice="auto",
         )
         
@@ -103,12 +110,11 @@ else:
             
             second_response = client.chat.completions.create(
                 model="gpt-4",
-                messages=st.session_state.messages + [{"role": "assistant", "content": assistant_message.content}],
+                messages=msgs + [{"role": "assistant", "content": assistant_message.content, "tool_calls": assistant_message.tool_calls}] + 
+                         [{"role": "function", "name": call.function.name, "content": st.session_state.messages[-1]["content"]} for call in assistant_message.tool_calls],
             )
-            final_response = second_response.choices[0].message.content
-        else:
-            final_response = assistant_message.content
+            assistant_message = second_response.choices[0].message
         
-        st.session_state.messages.append({"role": "assistant", "content": final_response})
+        st.session_state.messages.append({"role": "assistant", "content": assistant_message.content})
         with st.chat_message("assistant"):
-            st.markdown(final_response)
+            st.markdown(assistant_message.content)
