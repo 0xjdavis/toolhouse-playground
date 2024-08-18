@@ -2,7 +2,6 @@ import streamlit as st
 from openai import OpenAI
 import requests
 import json
-import os
 from datetime import datetime, timezone
 
 def send_email(api_key, domain, sender, recipient, subject, body):
@@ -50,42 +49,36 @@ else:
         with st.chat_message("user"):
             st.markdown(prompt)
         
-        tools = [
+        functions = [
             {
-                "type": "function",
-                "function": {
-                    "name": "send_email",
-                    "description": "Send an email using the Mailgun API",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "sender": {"type": "string", "description": "Sender email address"},
-                            "recipient": {"type": "string", "description": "Recipient email address"},
-                            "subject": {"type": "string", "description": "Subject of the email"},
-                            "body": {"type": "string", "description": "Body of the email"}
-                        },
-                        "required": ["sender", "recipient", "subject", "body"]
-                    }
+                "name": "send_email",
+                "description": "Send an email using the Mailgun API",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "sender": {"type": "string", "description": "Sender email address"},
+                        "recipient": {"type": "string", "description": "Recipient email address"},
+                        "subject": {"type": "string", "description": "Subject of the email"},
+                        "body": {"type": "string", "description": "Body of the email"}
+                    },
+                    "required": ["sender", "recipient", "subject", "body"]
                 }
             },
             {
-                "type": "function",
-                "function": {
-                    "name": "current_time",
-                    "description": "Gets the current UTC time in ISO format.",
-                    "parameters": {}
-                }
+                "name": "current_time",
+                "description": "Gets the current UTC time in ISO format.",
+                "parameters": {}
             },
         ]
         
         msgs = [
             {"role": "system", "content": "You are a helpful assistant that can chat with a user and send emails. Your sender email address is 'hello@sorcery.ai'."},
-        ] + [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages if m["content"] is not None]
+        ] + [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
         
         response = client.chat.completions.create(
             model="gpt-4",
             messages=msgs,
-            tools=tools,
+            tools=functions,
             tool_choice="auto",
         )
         
@@ -110,10 +103,12 @@ else:
             
             second_response = client.chat.completions.create(
                 model="gpt-4",
-                messages=st.session_state.messages,
+                messages=st.session_state.messages + [{"role": "assistant", "content": assistant_message.content}],
             )
-            assistant_message = second_response.choices[0].message
+            final_response = second_response.choices[0].message.content
+        else:
+            final_response = assistant_message.content
         
-        st.session_state.messages.append({"role": "assistant", "content": assistant_message.content})
+        st.session_state.messages.append({"role": "assistant", "content": final_response})
         with st.chat_message("assistant"):
-            st.markdown(assistant_message.content)
+            st.markdown(final_response)
