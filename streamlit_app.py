@@ -73,17 +73,14 @@ else:
                 "function": {
                     "name": "current_time",
                     "description": "Gets the current UTC time in ISO format.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {}
-                    }
+                    "parameters": {}
                 }
-            }
+            },
         ]
         
         msgs = [
             {"role": "system", "content": "You are a helpful assistant that can chat with a user and send emails. Your sender email address is 'hello@sorcery.ai'."},
-        ] + [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+        ] + [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages if m["content"] is not None]
         
         response = client.chat.completions.create(
             model="gpt-4",
@@ -106,27 +103,17 @@ else:
                         subject=arguments['subject'],
                         body=arguments['body']
                     )
-                    st.session_state.messages.append({
-                        "role": "function",
-                        "name": "send_email",
-                        "content": f"Email sent: {result}"
-                    })
+                    st.session_state.messages.append({"role": "function", "name": "send_email", "content": result})
                 elif tool_call.function.name == "current_time":
                     utc_time = datetime.now(timezone.utc).isoformat()
-                    st.session_state.messages.append({
-                        "role": "function",
-                        "name": "current_time",
-                        "content": utc_time
-                    })
+                    st.session_state.messages.append({"role": "function", "name": "current_time", "content": utc_time})
             
             second_response = client.chat.completions.create(
                 model="gpt-4",
-                messages=st.session_state.messages + [{"role": "assistant", "content": assistant_message.content}],
+                messages=st.session_state.messages,
             )
-            final_response = second_response.choices[0].message.content
-        else:
-            final_response = assistant_message.content
+            assistant_message = second_response.choices[0].message
         
-        st.session_state.messages.append({"role": "assistant", "content": final_response})
+        st.session_state.messages.append({"role": "assistant", "content": assistant_message.content})
         with st.chat_message("assistant"):
-            st.write(final_response)
+            st.markdown(assistant_message.content)
