@@ -5,17 +5,32 @@ import json
 import os
 from datetime import datetime, timezone
 
+# def send_email(api_key, domain, sender, recipient, subject, body):
+
+#    url = f"https://api.mailgun.net/v3/{domain}/messages"
+#    auth = ("api", api_key)
+#    data = {
+#        "from": sender,
+#        "to": recipient,
+#        "subject": subject,
+#        "text": body
+#    }
+
 def send_email(api_key, domain, sender, recipient, subject, body):
-
-    url = f"https://api.mailgun.net/v3/{domain}/messages"
+# return requests.post(
+    "https://api.mailgun.net/v3/{domain}/messages",
     auth = ("api", api_key)
-    data = {
-        "from": sender,
+    data={
+        "from": "Sorcery Agent <mailgun@mailagent.sorcery.ai>",
         "to": recipient,
-        "subject": subject,
-        "text": body
-    }
+        "subject": "Email from a Sorcery AI Agent",
+        "text": "Works like a charm"}
+#)
 
+
+
+
+    
     response = requests.post(url, auth=auth, data=data)
     
     if response.status_code == 200:
