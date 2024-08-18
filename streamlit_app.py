@@ -86,8 +86,7 @@ else:
         ]
         msgs = [
             {"role": "system", "content": "You are a helpful assistant that can chat with a user and send emails."},
-            {"role": "assistant", "content": "My sender email address is 'mailgun.sandbox1174a2f2424c4d07913816604e3c1138.mailgun.org'."},
-            #'mailgun@sandboxe3ee30865707422a8f4ce9da59bc9c8c.mailgun.org'."},
+            {"role": "assistant", "content": "My sender email address is 'mailgun.sorcery.ai."},
             ] + [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
         stream = client.chat.completions.create(
             model="gpt-4o",
