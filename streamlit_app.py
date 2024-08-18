@@ -2,6 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import requests
 import json
+import os
 from datetime import datetime, timezone
 
 def send_email(api_key, domain, sender, recipient, subject, body):
@@ -21,7 +22,7 @@ def send_email(api_key, domain, sender, recipient, subject, body):
     else:
         return f"Failed to send email: {response.status_code}, {response.text}"
 
-st.title("AI Chatbot with Email Tools")
+st.title("💬 Chatbot")
 st.write(
     "This is a simple chatbot that uses OpenAI's GPT-4 model to generate responses. "
     "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
@@ -67,16 +68,13 @@ else:
             {
                 "name": "current_time",
                 "description": "Gets the current UTC time in ISO format.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {}
-                }
+                "parameters": {}
             },
         ]
         
         msgs = [
             {"role": "system", "content": "You are a helpful assistant that can chat with a user and send emails. Your sender email address is 'hello@sorcery.ai'."},
-        ] + st.session_state.messages
+        ] + [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
         
         response = client.chat.completions.create(
             model="gpt-4",
@@ -89,24 +87,26 @@ else:
         
         if assistant_message.tool_calls:
             for tool_call in assistant_message.tool_calls:
-                if tool_call.function.name == "send_email":
-                    arguments = json.loads(tool_call.function.arguments)
+                function_name = tool_call.function.name
+                function_args = json.loads(tool_call.function.arguments)
+                
+                if function_name == "send_email":
                     result = send_email(
                         api_key=mailgun_api_key,
                         domain=mailgun_domain,
-                        sender=arguments['sender'],
-                        recipient=arguments['recipient'],
-                        subject=arguments['subject'],
-                        body=arguments['body']
+                        sender=function_args['sender'],
+                        recipient=function_args['recipient'],
+                        subject=function_args['subject'],
+                        body=function_args['body']
                     )
-                    st.session_state.messages.append({
+                    msgs.append({
                         "role": "function",
                         "name": "send_email",
-                        "content": result
+                        "content": f"Email sent: {result}"
                     })
-                elif tool_call.function.name == "current_time":
+                elif function_name == "current_time":
                     utc_time = datetime.now(timezone.utc).isoformat()
-                    st.session_state.messages.append({
+                    msgs.append({
                         "role": "function",
                         "name": "current_time",
                         "content": utc_time
@@ -114,7 +114,7 @@ else:
             
             second_response = client.chat.completions.create(
                 model="gpt-4",
-                messages=st.session_state.messages,
+                messages=msgs,
             )
             assistant_message = second_response.choices[0].message
         
