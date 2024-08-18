@@ -21,9 +21,6 @@ def send_email(api_key, domain, sender, recipient, subject, body):
     else:
         return f"Failed to send email: {response.status_code}, {response.text}"
 
-def get_current_time():
-    return datetime.now(timezone.utc).isoformat()
-
 st.title("💬 Chatbot")
 st.write(
     "This is a simple chatbot that uses OpenAI's GPT-4 model to generate responses. "
@@ -52,37 +49,46 @@ else:
         with st.chat_message("user"):
             st.markdown(prompt)
         
-        functions = [
+        tools = [
             {
-                "name": "send_email",
-                "description": "Send an email using the Mailgun API",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "sender": {"type": "string", "description": "Sender email address"},
-                        "recipient": {"type": "string", "description": "Recipient email address"},
-                        "subject": {"type": "string", "description": "Subject of the email"},
-                        "body": {"type": "string", "description": "Body of the email"}
-                    },
-                    "required": ["sender", "recipient", "subject", "body"]
-                }
+                "type": "function",
+                "function": {
+                    "name": "send_email",
+                    "description": "Send an email using the Mailgun API",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "sender": {"type": "string", "description": "Sender email address"},
+                            "recipient": {"type": "string", "description": "Recipient email address"},
+                            "subject": {"type": "string", "description": "Subject of the email"},
+                            "body": {"type": "string", "description": "Body of the email"}
+                        },
+                        "required": ["sender", "recipient", "subject", "body"]
+                    }
+                },
             },
             {
-                "name": "get_current_time",
-                "description": "Gets the current UTC time in ISO format.",
-                "parameters": {}
+                "type": "function",
+                "function": {
+                    "name": "current_time",
+                    "description": "Gets the current UTC time in ISO format.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                    }
+                },
             },
         ]
         
         msgs = [
             {"role": "system", "content": "You are a helpful assistant that can chat with a user and send emails."},
             {"role": "assistant", "content": "My sender email address is 'hello@sorcery.ai'."},
-        ] + st.session_state.messages
+        ] + [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
         
         response = client.chat.completions.create(
             model="gpt-4",
             messages=msgs,
-            tools=functions,
+            tools=tools,
             tool_choice="auto",
         )
         
@@ -90,34 +96,32 @@ else:
         
         if assistant_message.tool_calls:
             for tool_call in assistant_message.tool_calls:
-                function_name = tool_call.function.name
-                function_args = json.loads(tool_call.function.arguments)
-                
-                if function_name == "send_email":
+                if tool_call.function.name == "send_email":
+                    arguments = json.loads(tool_call.function.arguments)
                     result = send_email(
                         api_key=mailgun_api_key,
                         domain=mailgun_domain,
-                        sender=function_args['sender'],
-                        recipient=function_args['recipient'],
-                        subject=function_args['subject'],
-                        body=function_args['body']
+                        sender=arguments['sender'],
+                        recipient=arguments['recipient'],
+                        subject=arguments['subject'],
+                        body=arguments['body']
                     )
-                    msgs.append({
+                    st.session_state.messages.append({
                         "role": "function",
-                        "name": "send_email",
-                        "content": f"Email sent: {result}"
+                        "content": f"Email sent: {result}",
+                        "name": "send_email"
                     })
-                elif function_name == "get_current_time":
-                    current_time = get_current_time()
-                    msgs.append({
+                elif tool_call.function.name == "current_time":
+                    utc_time = datetime.now(timezone.utc).isoformat()
+                    st.session_state.messages.append({
                         "role": "function",
-                        "name": "get_current_time",
-                        "content": current_time
+                        "content": utc_time,
+                        "name": "current_time"
                     })
             
             second_response = client.chat.completions.create(
                 model="gpt-4",
-                messages=msgs,
+                messages=st.session_state.messages,
             )
             assistant_message = second_response.choices[0].message
         
