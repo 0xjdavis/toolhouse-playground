@@ -126,11 +126,42 @@ def handle_model_response(client, stream, mailgun_api_key, mailgun_domain, msgs)
             st.write(response_content)
 
 def main():
-    st.title("💬 Chatbot")
+
+    
+    # Setting page layout
+    st.set_page_config(
+        page_title="Figma basics",
+        page_icon="✨",
+        layout="centered",
+        initial_sidebar_state="expanded"
+    )
+    
+    # Sidebar for API Key and User Info
+    st.sidebar.header("About App")
+    st.sidebar.markdown('This is an app that retreives data from files using the Figma API created by <a href="https://ai.jdavis.xyz" target="_blank">0xjdavis</a>.', unsafe_allow_html=True)
+    
+    # Calendly
+    st.sidebar.markdown("""
+        <hr />
+        <center>
+        <div style="border-radius:8px;padding:8px;background:#fff";width:100%;">
+        <img src="https://avatars.githubusercontent.com/u/98430977" alt="Oxjdavis" height="100" width="100" border="0" style="border-radius:50%"/>
+        <br />
+        <span style="height:12px;width:12px;background-color:#77e0b5;border-radius:50%;display:inline-block;"></span> <b>I'm available for new projects!</b><br />
+        <a href="https://calendly.com/0xjdavis" target="_blank"><button style="background:#126ff3;color:#fff;border: 1px #126ff3 solid;border-radius:8px;padding:8px 16px;margin:10px 0">Schedule a call</button></a><br />
+        </div>
+        </center>
+        <br />
+    """, unsafe_allow_html=True)
+    
+    # Copyright
+    st.sidebar.caption("©️ Copyright 2024 J. Davis")
+
+    st.title("AI Chatbot with Email Tools")
     st.write(
-        "This is a simple chatbot that uses OpenAI's GPT-4 model to generate responses. "
-        "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-        "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
+        "This chatbot uses OpenAI's GPT-4 model for natural language processing and Mailgun to send emails."
+        "You need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
+        
     )
 
     openai_api_key = st.text_input("OpenAI API Key", type="password")
@@ -145,7 +176,7 @@ def main():
         initialize_session_state()
         display_chat_history()
         
-        if prompt := st.chat_input("What is up?"):
+        if prompt := st.chat_input("What's up?"):
             handle_user_input(client, prompt, mailgun_api_key, mailgun_domain)
 
 if __name__ == "__main__":
