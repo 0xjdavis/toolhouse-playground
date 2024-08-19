@@ -134,7 +134,8 @@ def call_anthropic(**kwargs):
 
 def call_groq(**kwargs):
   client = OpenAI(
-    api_key=os.environ.get('GROQCLOUD_API_KEY'),
+    #api_key=os.environ.get('GROQCLOUD_API_KEY'),
+    api_key = st.secrets["GROQ_KEY"],
     base_url="https://api.groq.com/openai/v1",
   )
 
@@ -159,8 +160,9 @@ def call_groq(**kwargs):
   
 def call_together(**kwargs):
   client = OpenAI(
-    api_key=os.environ.get('TOGETHER_API_KEY'),
-    base_url="https://api.together.xyz/v1",
+    #api_key = os.environ.get('TOGETHER_API_KEY'),
+    api_key = st.secrets["TOGETHER_KEY"],
+    base_url = "https://api.together.xyz/v1",
   )
       
   return client.chat.completions.create(**kwargs)
