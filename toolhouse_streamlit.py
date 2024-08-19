@@ -24,15 +24,13 @@ import dotenv
 
 dotenv.load_dotenv()
 
-st.logo(
-    "logo.svg",
-    link="https://toolhouse.ai")
+st.logo("logo.svg", link="https://toolhouse.ai")
 
 with st.sidebar:
     st.title("💬 Toolhouse Playground")
     llm_choice = st.selectbox("Model", tuple(llms.keys()))
     st.session_state.stream = st.toggle("Stream responses", True)
-    user = st.text_input("User", "daniele")
+    user = st.text_input("User", "0xjdavis")
     st.divider()
     t = Toolhouse(provider="anthropic")
     available_tools = t.get_tools()
@@ -60,7 +58,7 @@ if user:
 
 print_messages(st.session_state.messages, st.session_state.provider)
 
-if prompt := st.chat_input("What is up?"):
+if prompt := st.chat_input("What's good?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
